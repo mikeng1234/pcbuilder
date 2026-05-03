@@ -13,18 +13,19 @@ export function Inventory({ inventory, setInventory }: Props) {
   const [editing, setEditing] = useState<Component | null>(null);
   const [isNew, setIsNew] = useState(false);
 
-  const visible = useMemo(
-    () => filter === "All" ? inventory : inventory.filter(i => i.category === filter),
-    [inventory, filter]
+  // Categories to render as sections (always shows even if empty so the Add button is visible)
+  const visibleCategories: Category[] = useMemo(
+    () => filter === "All" ? ALL_CATEGORIES : [filter],
+    [filter]
   );
 
-  const grouped = useMemo(() => {
+  const itemsByCategory = useMemo(() => {
     const m: Record<string, Component[]> = {};
-    for (const it of visible) {
+    for (const it of inventory) {
       (m[it.category] ||= []).push(it);
     }
     return m;
-  }, [visible]);
+  }, [inventory]);
 
   const onSave = (item: Component) => {
     if (isNew) {
@@ -73,56 +74,69 @@ export function Inventory({ inventory, setInventory }: Props) {
         })}
       </div>
 
-      {Object.keys(grouped).map(cat => (
-        <div key={cat} className="mb-5">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300">{cat}</h3>
-            <button
-              onClick={() => onAddNew(cat as Category)}
-              className="rounded bg-emerald-700 px-2 py-1 text-[10px] font-semibold hover:bg-emerald-600"
-            >+ Add {cat}</button>
-          </div>
-          <div className="overflow-hidden rounded border border-slate-800">
-            <table className="w-full text-xs">
-              <thead className="bg-slate-800 text-slate-400">
-                <tr>
-                  <th className="px-3 py-1.5 text-left">Brand / Model</th>
-                  <th className="px-3 py-1.5 text-left">Specs</th>
-                  <th className="px-3 py-1.5 text-right">Cost</th>
-                  <th className="px-3 py-1.5 text-right">Price</th>
-                  <th className="px-3 py-1.5 text-right">Margin</th>
-                  <th className="px-3 py-1.5"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {grouped[cat].map(it => {
-                  const margin = it.price > 0 ? ((it.price - it.cost) / it.price * 100).toFixed(0) : "—";
-                  return (
-                    <tr key={it.id} className="border-t border-slate-800 hover:bg-slate-800/50">
-                      <td className="px-3 py-1.5">{it.brand} {it.model}</td>
-                      <td className="px-3 py-1.5 text-slate-400">{specSummary(it)}</td>
-                      <td className="px-3 py-1.5 text-right font-mono">{php(it.cost)}</td>
-                      <td className="px-3 py-1.5 text-right font-mono text-emerald-400">{php(it.price)}</td>
-                      <td className="px-3 py-1.5 text-right font-mono text-amber-400">{margin}%</td>
-                      <td className="px-3 py-1.5 text-right">
-                        <button
-                          onClick={() => { setEditing(it); setIsNew(false); }}
-                          className="text-emerald-400 hover:text-emerald-300"
-                        >edit</button>
-                        <span className="mx-1.5 text-slate-700">|</span>
-                        <button
-                          onClick={() => onDelete(it.id)}
-                          className="text-rose-400 hover:text-rose-300"
-                        >del</button>
+      {visibleCategories.map(cat => {
+        const items = itemsByCategory[cat] ?? [];
+        return (
+          <div key={cat} className="mb-5">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300">
+                {cat} <span className="text-slate-500">({items.length})</span>
+              </h3>
+              <button
+                onClick={() => onAddNew(cat)}
+                className="rounded bg-emerald-700 px-2 py-1 text-[10px] font-semibold hover:bg-emerald-600"
+              >+ Add {cat}</button>
+            </div>
+            <div className="overflow-hidden rounded border border-slate-800">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-800 text-slate-400">
+                  <tr>
+                    <th className="px-3 py-1.5 text-left">Brand / Model</th>
+                    <th className="px-3 py-1.5 text-left">Specs</th>
+                    <th className="px-3 py-1.5 text-right">Cost</th>
+                    <th className="px-3 py-1.5 text-right">Price</th>
+                    <th className="px-3 py-1.5 text-right">Margin</th>
+                    <th className="px-3 py-1.5"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.length === 0 ? (
+                    <tr className="border-t border-slate-800">
+                      <td colSpan={6} className="px-3 py-3 text-center text-slate-500">
+                        No {cat} in inventory yet — click <span className="text-emerald-400">+ Add {cat}</span> above.
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ) : (
+                    items.map(it => {
+                      const margin = it.price > 0 ? ((it.price - it.cost) / it.price * 100).toFixed(0) : "—";
+                      return (
+                        <tr key={it.id} className="border-t border-slate-800 hover:bg-slate-800/50">
+                          <td className="px-3 py-1.5">{it.brand} {it.model}</td>
+                          <td className="px-3 py-1.5 text-slate-400">{specSummary(it)}</td>
+                          <td className="px-3 py-1.5 text-right font-mono">{php(it.cost)}</td>
+                          <td className="px-3 py-1.5 text-right font-mono text-emerald-400">{php(it.price)}</td>
+                          <td className="px-3 py-1.5 text-right font-mono text-amber-400">{margin}%</td>
+                          <td className="px-3 py-1.5 text-right">
+                            <button
+                              onClick={() => { setEditing(it); setIsNew(false); }}
+                              className="text-emerald-400 hover:text-emerald-300"
+                            >edit</button>
+                            <span className="mx-1.5 text-slate-700">|</span>
+                            <button
+                              onClick={() => onDelete(it.id)}
+                              className="text-rose-400 hover:text-rose-300"
+                            >del</button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {editing && (
         <EditModal
