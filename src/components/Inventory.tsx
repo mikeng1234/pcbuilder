@@ -47,6 +47,15 @@ export function Inventory({ inventory, setInventory }: Props) {
     setIsNew(true);
   };
 
+  const onDuplicate = (item: Component) => {
+    const copy: Component = {
+      ...item,
+      id: `${item.category.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+      model: `${item.model} (copy)`,
+    } as Component;
+    setInventory([...inventory, copy]);
+  };
+
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-5">
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -121,6 +130,12 @@ export function Inventory({ inventory, setInventory }: Props) {
                               onClick={() => { setEditing(it); setIsNew(false); }}
                               className="text-emerald-400 hover:text-emerald-300"
                             >edit</button>
+                            <span className="mx-1.5 text-slate-700">|</span>
+                            <button
+                              onClick={() => onDuplicate(it)}
+                              className="text-sky-400 hover:text-sky-300"
+                              title="Duplicate this item"
+                            >dup</button>
                             <span className="mx-1.5 text-slate-700">|</span>
                             <button
                               onClick={() => onDelete(it.id)}
