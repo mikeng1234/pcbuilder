@@ -1,4 +1,5 @@
 import type { Component } from "../types/components";
+import { php } from "../lib/format";
 
 interface Props {
   label: string;
@@ -31,7 +32,7 @@ export function Slot({ label, item, onClick, onClear, className = "", compact }:
             {item.brand} {item.model}
           </div>
           {!compact && (
-            <div className="font-mono text-[10px] text-emerald-300">${item.price}</div>
+            <div className="font-mono text-[10px] text-emerald-300">{php(item.price)}</div>
           )}
         </div>
       ) : (

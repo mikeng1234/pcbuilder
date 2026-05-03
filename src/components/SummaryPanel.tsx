@@ -1,5 +1,6 @@
 import type { Build, SavedBuild } from "../types/components";
 import { buildTotals, validateBuild } from "../lib/compatibility";
+import { php } from "../lib/format";
 
 interface Props {
   build: Build;
@@ -32,9 +33,9 @@ export function SummaryPanel({
       <h2 className="mb-4 text-lg font-bold tracking-wide">Build Summary</h2>
 
       <div className="space-y-3">
-        <Row label="Total Price" value={`$${totals.price.toFixed(2)}`} accent="emerald" />
-        <Row label="Total Cost" value={`$${totals.cost.toFixed(2)}`} />
-        <Row label="Profit" value={`$${totals.profit.toFixed(2)}`} accent="amber" />
+        <Row label="Total Price" value={php(totals.price)} accent="emerald" />
+        <Row label="Total Cost" value={php(totals.cost)} />
+        <Row label="Profit" value={php(totals.profit)} accent="amber" />
         <Row label="Margin" value={`${totals.margin.toFixed(1)}%`} accent="amber" />
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { Build, Component } from "../types/components";
 import { isCompatible } from "../lib/compatibility";
+import { php } from "../lib/format";
 
 interface Props {
   open: boolean;
@@ -55,11 +56,11 @@ export function PickerModal({ open, title, items, build, onPick, onClose }: Prop
                   <span className="font-semibold text-slate-100">
                     {item.brand} {item.model}
                   </span>
-                  <span className="font-mono text-emerald-400">${item.price}</span>
+                  <span className="font-mono text-emerald-400">{php(item.price)}</span>
                 </div>
                 <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
                   <span>{specSummary(item)}</span>
-                  <span className="font-mono">cost ${item.cost}</span>
+                  <span className="font-mono">cost {php(item.cost)}</span>
                 </div>
                 {!compat.ok && (
                   <span className="mt-1 text-xs text-rose-400">{compat.reason}</span>

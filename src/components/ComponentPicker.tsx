@@ -1,5 +1,6 @@
 import type { Component, Build } from "../types/components";
 import { isCompatible } from "../lib/compatibility";
+import { php } from "../lib/format";
 
 interface Props {
   label: string;
@@ -80,11 +81,11 @@ export function ComponentPicker({
                 <span className="font-medium text-slate-100">
                   {item.brand} {item.model}
                 </span>
-                <span className="font-mono text-emerald-400">${item.price}</span>
+                <span className="font-mono text-emerald-400">{php(item.price)}</span>
               </div>
               <div className="mt-0.5 flex w-full items-center justify-between text-[10px] text-slate-500">
                 <span>{specSummary(item)}</span>
-                <span className="font-mono">cost ${item.cost}</span>
+                <span className="font-mono">cost {php(item.cost)}</span>
               </div>
               {!compat.ok && (
                 <span className="mt-1 text-[10px] text-rose-400">{compat.reason}</span>

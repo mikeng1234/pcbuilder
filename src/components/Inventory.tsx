@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Category, Component } from "../types/components";
 import { ALL_CATEGORIES, exportInventory, templateFor } from "../lib/inventory";
+import { php } from "../lib/format";
 
 interface Props {
   inventory: Component[];
@@ -100,8 +101,8 @@ export function Inventory({ inventory, setInventory }: Props) {
                     <tr key={it.id} className="border-t border-slate-800 hover:bg-slate-800/50">
                       <td className="px-3 py-1.5">{it.brand} {it.model}</td>
                       <td className="px-3 py-1.5 text-slate-400">{specSummary(it)}</td>
-                      <td className="px-3 py-1.5 text-right font-mono">${it.cost}</td>
-                      <td className="px-3 py-1.5 text-right font-mono text-emerald-400">${it.price}</td>
+                      <td className="px-3 py-1.5 text-right font-mono">{php(it.cost)}</td>
+                      <td className="px-3 py-1.5 text-right font-mono text-emerald-400">{php(it.price)}</td>
                       <td className="px-3 py-1.5 text-right font-mono text-amber-400">{margin}%</td>
                       <td className="px-3 py-1.5 text-right">
                         <button
