@@ -1,0 +1,55 @@
+Processors
+i5 9th F Gen
+i3 10th F Gen
+RYZEN 5 3600 6-Core 
+
+GPU
+Asus GTX 1050Ti EX OC 4GB DDR5 GPU 
+Galax GTX 1050Ti OC 4GB DDR5 GPU 
+Palit GTX 1050Ti 4GB DDR5 GPU 
+
+
+Motherboard
+Gigabyte H310M S2H 2.0
+Gigabyte H410M V2
+AM4 ASROCK B450M HDV
+
+
+SSD
+WD Green 120Gb
+PNY SSD 4Tb
+SP 240GB SSD
+RAMSTA 120 Gb SSD
+Skihotar 128 Gb SSD 
+Kingspec 120 Gb SSD 
+
+NVME
+Kingston 500Gb
+
+HDD
+Seagate 1Tb
+Seagate 1Tb
+Seagate 1Tb
+Seagate 1.5Tb
+
+PSU
+Generic 850W Max
+Generic 850W Max
+Aerocool Strike X 500W 80+ Bronze
+
+RAM all DDR4
+HyperX HX426C16FB2/8	
+HyperX HX426C16FB2/8	
+HyperX HX426C16FB3/16
+HyperX HX426C16FB3/16
+Kingston KF426C16BB1/16
+Kingston KF426C16BB1/16
+Kingston 2400MHz 8Gb
+Kingston 2400MHz 8Gb
+
+Monitor
+Samsung 24"
+HP Z24i 24"
+HP 24"
+Samsung 24" Frameless
+Dell 22" Frameless

@@ -1,0 +1,48 @@
+{
+  "components": [
+    { "id": "cpu-001", "category": "CPU", "brand": "Intel", "model": "Core i5-9400F (9th Gen)", "cost": 0, "price": 0, "socket": "LGA1151", "supported_memory": "DDR4", "tdp_w": 65 },
+    { "id": "cpu-002", "category": "CPU", "brand": "Intel", "model": "Core i3-10100F (10th Gen)", "cost": 0, "price": 0, "socket": "LGA1200", "supported_memory": "DDR4", "tdp_w": 65 },
+    { "id": "cpu-003", "category": "CPU", "brand": "AMD",   "model": "Ryzen 5 3600 (6-Core)",     "cost": 0, "price": 0, "socket": "AM4",     "supported_memory": "DDR4", "tdp_w": 65 },
+
+    { "id": "gpu-001", "category": "GPU", "brand": "ASUS",   "model": "GTX 1050 Ti EX OC 4GB GDDR5", "cost": 0, "price": 0, "length_mm": 211, "recommended_psu_w": 300 },
+    { "id": "gpu-002", "category": "GPU", "brand": "Galax",  "model": "GTX 1050 Ti OC 4GB GDDR5",    "cost": 0, "price": 0, "length_mm": 200, "recommended_psu_w": 300 },
+    { "id": "gpu-003", "category": "GPU", "brand": "Palit",  "model": "GTX 1050 Ti 4GB GDDR5",       "cost": 0, "price": 0, "length_mm": 145, "recommended_psu_w": 300 },
+
+    { "id": "mb-001", "category": "Motherboard", "brand": "Gigabyte", "model": "H310M S2H 2.0",    "cost": 0, "price": 0, "socket": "LGA1151", "form_factor": "mATX", "ram_type": "DDR4", "max_ram_slots": 2, "nvme_slots": 1, "sata_ports": 4 },
+    { "id": "mb-002", "category": "Motherboard", "brand": "Gigabyte", "model": "H410M V2",         "cost": 0, "price": 0, "socket": "LGA1200", "form_factor": "mATX", "ram_type": "DDR4", "max_ram_slots": 2, "nvme_slots": 1, "sata_ports": 4 },
+    { "id": "mb-003", "category": "Motherboard", "brand": "ASRock",   "model": "B450M HDV (AM4)",  "cost": 0, "price": 0, "socket": "AM4",     "form_factor": "mATX", "ram_type": "DDR4", "max_ram_slots": 2, "nvme_slots": 1, "sata_ports": 4 },
+
+    { "id": "ssd-001", "category": "SSD", "brand": "WD",       "model": "Green 120GB",      "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 120 },
+    { "id": "ssd-002", "category": "SSD", "brand": "PNY",      "model": "SSD 4TB",          "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 4000 },
+    { "id": "ssd-003", "category": "SSD", "brand": "Silicon Power", "model": "SP 240GB",    "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 240 },
+    { "id": "ssd-004", "category": "SSD", "brand": "RAMSTA",   "model": "120GB SSD",        "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 120 },
+    { "id": "ssd-005", "category": "SSD", "brand": "Skihotar", "model": "128GB SSD",        "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 128 },
+    { "id": "ssd-006", "category": "SSD", "brand": "Kingspec", "model": "120GB SSD",        "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 120 },
+
+    { "id": "ssd-nvme-001", "category": "SSD", "brand": "Kingston", "model": "NVMe 500GB", "cost": 0, "price": 0, "storage_type": "NVMe", "capacity_gb": 500 },
+
+    { "id": "hdd-001", "category": "HDD", "brand": "Seagate", "model": "Barracuda 1TB (#1)", "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 1000 },
+    { "id": "hdd-002", "category": "HDD", "brand": "Seagate", "model": "Barracuda 1TB (#2)", "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 1000 },
+    { "id": "hdd-003", "category": "HDD", "brand": "Seagate", "model": "Barracuda 1TB (#3)", "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 1000 },
+    { "id": "hdd-004", "category": "HDD", "brand": "Seagate", "model": "Barracuda 1.5TB",    "cost": 0, "price": 0, "storage_type": "SATA", "capacity_gb": 1500 },
+
+    { "id": "psu-001", "category": "PSU", "brand": "Generic",  "model": "850W Max (#1)",            "cost": 0, "price": 0, "wattage": 850, "form_factor": "ATX" },
+    { "id": "psu-002", "category": "PSU", "brand": "Generic",  "model": "850W Max (#2)",            "cost": 0, "price": 0, "wattage": 850, "form_factor": "ATX" },
+    { "id": "psu-003", "category": "PSU", "brand": "Aerocool", "model": "Strike X 500W 80+ Bronze", "cost": 0, "price": 0, "wattage": 500, "form_factor": "ATX" },
+
+    { "id": "ram-001", "category": "RAM", "brand": "HyperX",   "model": "HX426C16FB2/8 8GB DDR4-2666 (#1)",   "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 8,  "speed_mhz": 2666, "module_count": 1 },
+    { "id": "ram-002", "category": "RAM", "brand": "HyperX",   "model": "HX426C16FB2/8 8GB DDR4-2666 (#2)",   "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 8,  "speed_mhz": 2666, "module_count": 1 },
+    { "id": "ram-003", "category": "RAM", "brand": "HyperX",   "model": "HX426C16FB3/16 16GB DDR4-2666 (#1)", "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 16, "speed_mhz": 2666, "module_count": 1 },
+    { "id": "ram-004", "category": "RAM", "brand": "HyperX",   "model": "HX426C16FB3/16 16GB DDR4-2666 (#2)", "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 16, "speed_mhz": 2666, "module_count": 1 },
+    { "id": "ram-005", "category": "RAM", "brand": "Kingston", "model": "Fury KF426C16BB1/16 16GB DDR4-2666 (#1)", "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 16, "speed_mhz": 2666, "module_count": 1 },
+    { "id": "ram-006", "category": "RAM", "brand": "Kingston", "model": "Fury KF426C16BB1/16 16GB DDR4-2666 (#2)", "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 16, "speed_mhz": 2666, "module_count": 1 },
+    { "id": "ram-007", "category": "RAM", "brand": "Kingston", "model": "ValueRAM 8GB DDR4-2400 (#1)",         "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 8,  "speed_mhz": 2400, "module_count": 1 },
+    { "id": "ram-008", "category": "RAM", "brand": "Kingston", "model": "ValueRAM 8GB DDR4-2400 (#2)",         "cost": 0, "price": 0, "ram_type": "DDR4", "capacity_gb": 8,  "speed_mhz": 2400, "module_count": 1 },
+
+    { "id": "mon-001", "category": "Monitor", "brand": "Samsung", "model": "24\" Monitor",            "cost": 0, "price": 0, "size_inches": 24 },
+    { "id": "mon-002", "category": "Monitor", "brand": "HP",      "model": "Z24i 24\"",               "cost": 0, "price": 0, "size_inches": 24 },
+    { "id": "mon-003", "category": "Monitor", "brand": "HP",      "model": "24\" Monitor",            "cost": 0, "price": 0, "size_inches": 24 },
+    { "id": "mon-004", "category": "Monitor", "brand": "Samsung", "model": "24\" Frameless",          "cost": 0, "price": 0, "size_inches": 24 },
+    { "id": "mon-005", "category": "Monitor", "brand": "Dell",    "model": "22\" Frameless",          "cost": 0, "price": 0, "size_inches": 22 }
+  ]
+}
