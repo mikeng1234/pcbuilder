@@ -64,7 +64,10 @@ export async function saveInventory(items: Component[]): Promise<StorageMode> {
   }
 
   if (items.length > 0) {
-    const rows = items.map(i => ({ id: i.id, category: i.category, data: i }));
+    // Dedupe by id (last write wins) — Supabase upsert errors if the same PK appears twice
+    const dedup = new Map<string, Component>();
+    for (const i of items) dedup.set(i.id, i);
+    const rows = Array.from(dedup.values()).map(i => ({ id: i.id, category: i.category, data: i }));
     const { error } = await supabase.from(TABLE).upsert(rows);
     if (error) throw new Error(error.message);
   }

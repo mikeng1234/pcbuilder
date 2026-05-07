@@ -206,11 +206,11 @@ export default function App() {
   const handleRestoreSale = async (sale: Sale) => {
     if (!confirm(`Restore ${sale.items.length} item(s) back to inventory and remove this archive entry?`)) return;
     try {
-      const existingIds = new Set(inventory.map(i => i.id));
-      const toRestore = sale.items.filter(i => !existingIds.has(i.id));
-      if (toRestore.length > 0) {
-        await setInventory([...inventory, ...toRestore]);
-      }
+      // Dedupe by id within the snapshot itself, then drop ones already in inventory
+      const merged = new Map<string, Component>();
+      for (const i of inventory) merged.set(i.id, i);
+      for (const i of sale.items) if (!merged.has(i.id)) merged.set(i.id, i);
+      await setInventory(Array.from(merged.values()));
       await deleteSale(sale.id);
       setSales(await listSales());
     } catch (e: any) {
