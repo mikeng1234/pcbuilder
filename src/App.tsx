@@ -203,6 +203,22 @@ export default function App() {
     }
   };
 
+  const handleRestoreSale = async (sale: Sale) => {
+    if (!confirm(`Restore ${sale.items.length} item(s) back to inventory and remove this archive entry?`)) return;
+    try {
+      const existingIds = new Set(inventory.map(i => i.id));
+      const toRestore = sale.items.filter(i => !existingIds.has(i.id));
+      if (toRestore.length > 0) {
+        await setInventory([...inventory, ...toRestore]);
+      }
+      await deleteSale(sale.id);
+      setSales(await listSales());
+    } catch (e: any) {
+      setSaveStatus("error");
+      setSaveError(e.message);
+    }
+  };
+
   const handleSave = () => { saveBuild(buildName, build); setSavedBuilds(listSavedBuilds()); };
   const handleLoad = (id: string) => {
     const f = savedBuilds.find(s => s.id === id);
@@ -231,7 +247,7 @@ export default function App() {
               📦 Inventory ({inventory.length})
             </TabButton>
             <TabButton active={tab === "sales"} onClick={() => setTab("sales")}>
-              💰 Sales ({sales.length})
+              📦 Archived ({sales.length})
             </TabButton>
           </nav>
         </div>
@@ -246,7 +262,7 @@ export default function App() {
       {tab === "inventory" ? (
         <Inventory inventory={inventory} setInventory={setInventory} />
       ) : tab === "sales" ? (
-        <Sales sales={sales} onDelete={handleDeleteSale} />
+        <Sales sales={sales} onDelete={handleDeleteSale} onRestore={handleRestoreSale} />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
           <main>

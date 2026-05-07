@@ -5,9 +5,10 @@ import { php } from "../lib/format";
 interface Props {
   sales: Sale[];
   onDelete: (id: string) => void;
+  onRestore: (sale: Sale) => void;
 }
 
-export function Sales({ sales, onDelete }: Props) {
+export function Sales({ sales, onDelete, onRestore }: Props) {
   const totals = useMemo(() => {
     const gross = sales.reduce((s, x) => s + Number(x.gross || 0), 0);
     const cost  = sales.reduce((s, x) => s + Number(x.cost  || 0), 0);
@@ -18,9 +19,9 @@ export function Sales({ sales, onDelete }: Props) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-5">
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-bold">💰 Sales History</h2>
+        <h2 className="text-lg font-bold">📦 Archived Builds</h2>
         <span className="text-xs text-slate-500">
-          Each row is an archived build with full item snapshot.
+          Sold/archived builds with full item snapshots and revenue. Click <span className="text-emerald-400">restore</span> to put items back in inventory.
         </span>
       </div>
 
@@ -33,7 +34,7 @@ export function Sales({ sales, onDelete }: Props) {
 
       {sales.length === 0 ? (
         <div className="rounded border border-slate-800 px-4 py-6 text-center text-sm text-slate-500">
-          No sales yet. Build a PC, click <span className="text-emerald-400">Mark as Sold</span> in the Build tab.
+          Nothing archived yet. Build a PC, click <span className="text-emerald-400">Mark as Sold</span> in the Build tab.
         </div>
       ) : (
         <div className="overflow-hidden rounded border border-slate-800">
@@ -78,15 +79,21 @@ export function Sales({ sales, onDelete }: Props) {
                     <td className="px-3 py-2 text-right font-mono">{php(Number(s.cost))}</td>
                     <td className="px-3 py-2 text-right font-mono text-amber-400">{php(Number(s.net))}</td>
                     <td className="px-3 py-2 text-right font-mono text-amber-400">{margin}%</td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-3 py-2 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => onRestore(s)}
+                        className="text-emerald-400 hover:text-emerald-300"
+                        title="Put items back in inventory and remove this archive entry"
+                      >restore</button>
+                      <span className="mx-1.5 text-slate-700">|</span>
                       <button
                         onClick={() => {
-                          if (confirm("Delete this sale record? Items will NOT come back to inventory.")) {
+                          if (confirm("Permanently delete this archive record? Items will NOT come back to inventory.")) {
                             onDelete(s.id);
                           }
                         }}
                         className="text-rose-400 hover:text-rose-300"
-                        title="Delete sale record"
+                        title="Delete archive record (does NOT restore items)"
                       >del</button>
                     </td>
                   </tr>
