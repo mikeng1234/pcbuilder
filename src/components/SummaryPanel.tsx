@@ -12,6 +12,8 @@ interface Props {
   onDelete: (id: string) => void;
   onExport: () => void;
   onReset: () => void;
+  onMarkSold: () => void;
+  buildItemCount: number;
 }
 
 export function SummaryPanel({
@@ -24,9 +26,18 @@ export function SummaryPanel({
   onDelete,
   onExport,
   onReset,
+  onMarkSold,
+  buildItemCount,
 }: Props) {
   const totals = buildTotals(build);
   const issues = validateBuild(build);
+
+  // Spec roll-ups
+  const totalRamGb = build.ramKits.reduce((s, k) => s + k.capacity_gb, 0);
+  const ssdSataGb = build.ssds.filter(s => s.storage_type === "SATA").reduce((sum, s) => sum + s.capacity_gb, 0);
+  const ssdNvmeGb = build.ssds.filter(s => s.storage_type === "NVMe").reduce((sum, s) => sum + s.capacity_gb, 0);
+  const hddGb     = build.hdds.reduce((sum, h) => sum + h.capacity_gb, 0);
+  const cpuLabel  = build.cpu ? `${build.cpu.brand} ${build.cpu.model}` : "—";
 
   return (
     <aside className="sticky top-4 flex h-[calc(100vh-2rem)] flex-col rounded-lg border border-slate-800 bg-slate-900/80 p-5">
@@ -37,6 +48,19 @@ export function SummaryPanel({
         <Row label="Total Cost" value={php(totals.cost)} />
         <Row label="Profit" value={php(totals.profit)} accent="amber" />
         <Row label="Margin" value={`${totals.margin.toFixed(1)}%`} accent="amber" />
+      </div>
+
+      <div className="my-4 h-px bg-slate-800" />
+
+      <div className="mb-3">
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Specs</h3>
+        <div className="space-y-1.5 text-xs">
+          <SpecRow label="Processor" value={cpuLabel} truncate />
+          <SpecRow label="Total RAM" value={totalRamGb > 0 ? `${totalRamGb} GB` : "—"} />
+          <SpecRow label="NVMe" value={fmtCapacity(ssdNvmeGb)} />
+          <SpecRow label="SSD (SATA)" value={fmtCapacity(ssdSataGb)} />
+          <SpecRow label="HDD" value={fmtCapacity(hddGb)} />
+        </div>
       </div>
 
       <div className="my-4 h-px bg-slate-800" />
@@ -89,6 +113,14 @@ export function SummaryPanel({
           >
             Reset Build
           </button>
+          <button
+            onClick={onMarkSold}
+            disabled={buildItemCount === 0}
+            className="col-span-2 rounded bg-amber-600 px-2 py-2 text-xs font-bold text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+            title={buildItemCount === 0 ? "Add items first" : "Archive this build, remove items from inventory, record the sale"}
+          >
+            💰 Mark as Sold ({buildItemCount} items)
+          </button>
         </div>
       </div>
 
@@ -125,4 +157,21 @@ function Row({ label, value, accent }: { label: string; value: string; accent?: 
       <span className={`font-mono text-base font-semibold ${color}`}>{value}</span>
     </div>
   );
+}
+
+function SpecRow({ label, value, truncate }: { label: string; value: string; truncate?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="shrink-0 text-[10px] uppercase tracking-wider text-slate-500">{label}</span>
+      <span className={`font-mono text-xs text-slate-200 ${truncate ? "truncate" : ""}`} title={value}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function fmtCapacity(gb: number): string {
+  if (gb <= 0) return "—";
+  if (gb >= 1000) return `${(gb / 1000).toFixed(gb % 1000 === 0 ? 0 : 1)} TB`;
+  return `${gb} GB`;
 }

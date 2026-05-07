@@ -7,7 +7,9 @@ import { Slot, MultiSlot } from "./components/Slot";
 import { PickerModal } from "./components/PickerModal";
 import { SummaryPanel } from "./components/SummaryPanel";
 import { Inventory } from "./components/Inventory";
+import { Sales } from "./components/Sales";
 import { emptyBuild } from "./lib/compatibility";
+import { listSales, recordSale, deleteSale, type Sale } from "./lib/sales";
 import {
   deleteSavedBuild, exportBuildAsJson, listSavedBuilds, saveBuild,
 } from "./lib/storage";
@@ -17,7 +19,7 @@ type PickerKey =
   | "Case" | "Motherboard" | "CPU" | "CPU Cooler" | "GPU" | "PSU"
   | "RAM" | "SSD" | "HDD" | "Fans" | "ExtenderCable" | "PeripheralsCombo" | "Monitor";
 
-type Tab = "build" | "inventory";
+type Tab = "build" | "inventory" | "sales";
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("build");
@@ -29,9 +31,13 @@ export default function App() {
   const [build, setBuild] = useState<Build>(emptyBuild());
   const [buildName, setBuildName] = useState("");
   const [savedBuilds, setSavedBuilds] = useState<SavedBuild[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [picker, setPicker] = useState<PickerKey | null>(null);
 
   useEffect(() => { setSavedBuilds(listSavedBuilds()); }, []);
+  useEffect(() => {
+    listSales().then(setSales).catch(err => console.warn("Failed to load sales:", err.message));
+  }, []);
 
   // Load inventory from Supabase (falls back to bundled seed if not configured)
   useEffect(() => {
@@ -106,8 +112,96 @@ export default function App() {
     }
   };
 
-  const pickerItems: Component[] = picker ? inv[picker] : [];
+  // Collect every component ID currently used somewhere in the build —
+  // these are filtered out of pickers so the same physical item can't be assigned twice.
+  const usedIds = useMemo(() => {
+    const ids = new Set<string>();
+    const add = (c: Component | null | undefined) => { if (c) ids.add(c.id); };
+    add(build.motherboard);
+    add(build.cpu);
+    add(build.cpuCooler);
+    add(build.psu);
+    add(build.gpu);
+    add(build.case);
+    build.ramKits.forEach(r => ids.add(r.id));
+    build.ssds.forEach(s => ids.add(s.id));
+    build.hdds.forEach(h => ids.add(h.id));
+    build.fans.forEach(f => ids.add(f.id));
+    build.extenderCables.forEach(e => ids.add(e.id));
+    build.peripherals.forEach(p => ids.add(p.id));
+    build.monitors.forEach(m => ids.add(m.id));
+    return ids;
+  }, [build]);
+
+  // For single-pick slots we still want the current selection visible (so the user can
+  // see "yes that's what's selected" and pick a swap). Multi-pick slots filter strictly.
+  const currentSinglePickId: string | null =
+    picker === "Motherboard" ? build.motherboard?.id ?? null :
+    picker === "CPU"         ? build.cpu?.id ?? null :
+    picker === "CPU Cooler"  ? build.cpuCooler?.id ?? null :
+    picker === "GPU"         ? build.gpu?.id ?? null :
+    picker === "PSU"         ? build.psu?.id ?? null :
+    picker === "Case"        ? build.case?.id ?? null :
+    null;
+
+  const pickerItems: Component[] = picker
+    ? inv[picker].filter(i => !usedIds.has(i.id) || i.id === currentSinglePickId)
+    : [];
   const pickerTitle = picker ? `Choose ${picker}` : "";
+
+  // Collect every component currently placed in the build (for sold archiving + count)
+  const buildItems = useMemo<Component[]>(() => {
+    const out: Component[] = [];
+    if (build.motherboard) out.push(build.motherboard);
+    if (build.cpu)         out.push(build.cpu);
+    if (build.cpuCooler)   out.push(build.cpuCooler);
+    if (build.psu)         out.push(build.psu);
+    if (build.gpu)         out.push(build.gpu);
+    if (build.case)        out.push(build.case);
+    out.push(...build.ramKits, ...build.ssds, ...build.hdds, ...build.fans,
+             ...build.extenderCables, ...build.peripherals, ...build.monitors);
+    return out;
+  }, [build]);
+
+  const handleMarkSold = async () => {
+    if (buildItems.length === 0) return;
+    const gross = buildItems.reduce((s, i) => s + (Number(i.price) || 0), 0);
+    const cost  = buildItems.reduce((s, i) => s + (Number(i.cost)  || 0), 0);
+    const net   = gross - cost;
+    const ok = confirm(
+      `Mark this build as SOLD?\n\n` +
+      `Items: ${buildItems.length}\n` +
+      `Gross: ₱${gross.toFixed(2)}\n` +
+      `Cost:  ₱${cost.toFixed(2)}\n` +
+      `Net:   ₱${net.toFixed(2)}\n\n` +
+      `These ${buildItems.length} items will be removed from inventory and archived in Sales.`
+    );
+    if (!ok) return;
+    try {
+      await recordSale({ name: buildName, items: buildItems });
+      // Remove sold items from inventory (this saves to Supabase)
+      const soldIds = new Set(buildItems.map(i => i.id));
+      await setInventory(inventory.filter(i => !soldIds.has(i.id)));
+      // Refresh sales list and reset build
+      const fresh = await listSales();
+      setSales(fresh);
+      setBuild(emptyBuild());
+      setBuildName("");
+    } catch (e: any) {
+      setSaveStatus("error");
+      setSaveError(e.message);
+    }
+  };
+
+  const handleDeleteSale = async (id: string) => {
+    try {
+      await deleteSale(id);
+      setSales(await listSales());
+    } catch (e: any) {
+      setSaveStatus("error");
+      setSaveError(e.message);
+    }
+  };
 
   const handleSave = () => { saveBuild(buildName, build); setSavedBuilds(listSavedBuilds()); };
   const handleLoad = (id: string) => {
@@ -136,6 +230,9 @@ export default function App() {
             <TabButton active={tab === "inventory"} onClick={() => setTab("inventory")}>
               📦 Inventory ({inventory.length})
             </TabButton>
+            <TabButton active={tab === "sales"} onClick={() => setTab("sales")}>
+              💰 Sales ({sales.length})
+            </TabButton>
           </nav>
         </div>
       </header>
@@ -148,6 +245,8 @@ export default function App() {
 
       {tab === "inventory" ? (
         <Inventory inventory={inventory} setInventory={setInventory} />
+      ) : tab === "sales" ? (
+        <Sales sales={sales} onDelete={handleDeleteSale} />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
           <main>
@@ -236,12 +335,11 @@ export default function App() {
                       />
 
                       <div className="col-span-6">
-                        <MultiSlot
-                          label="RAM (DIMM Slots)"
-                          items={build.ramKits}
-                          capacity={build.motherboard?.max_ram_slots}
+                        <DimmRow
+                          mobo={build.motherboard}
+                          kits={build.ramKits}
                           onAdd={() => setPicker("RAM")}
-                          onRemove={id => setBuild(b => ({ ...b, ramKits: b.ramKits.filter(r => r.id !== id) }))}
+                          onRemoveKit={kitIndex => setBuild(b => ({ ...b, ramKits: b.ramKits.filter((_, i) => i !== kitIndex) }))}
                         />
                       </div>
 
@@ -254,10 +352,9 @@ export default function App() {
                       />
 
                       <div className="col-span-3">
-                        <MultiSlot
-                          label="NVMe (M.2)"
-                          items={ssdNvme}
-                          capacity={build.motherboard?.nvme_slots}
+                        <NvmeRow
+                          mobo={build.motherboard}
+                          drives={ssdNvme}
                           onAdd={() => setPicker("SSD")}
                           onRemove={id => setBuild(b => ({ ...b, ssds: b.ssds.filter(s => s.id !== id) }))}
                         />
@@ -305,6 +402,8 @@ export default function App() {
             onDelete={handleDelete}
             onExport={handleExport}
             onReset={handleReset}
+            onMarkSold={handleMarkSold}
+            buildItemCount={buildItems.length}
           />
         </div>
       )}
@@ -317,6 +416,136 @@ export default function App() {
         onPick={onPick}
         onClose={() => setPicker(null)}
       />
+    </div>
+  );
+}
+
+// Discrete DIMM slots tied to motherboard.max_ram_slots.
+// Each kit's module_count occupies that many visual positions; clicking × removes the kit.
+function DimmRow({
+  mobo, kits, onAdd, onRemoveKit,
+}: {
+  mobo: Motherboard | null;
+  kits: RAM[];
+  onAdd: () => void;
+  onRemoveKit: (kitIndex: number) => void;
+}) {
+  const total = mobo?.max_ram_slots ?? 0;
+  type Cell = { kit: RAM; kitIndex: number; first: boolean } | null;
+  const cells: Cell[] = [];
+  kits.forEach((kit, kitIndex) => {
+    for (let i = 0; i < kit.module_count; i++) {
+      cells.push({ kit, kitIndex, first: i === 0 });
+    }
+  });
+  while (cells.length < total) cells.push(null);
+  const usedSticks = kits.reduce((s, k) => s + k.module_count, 0);
+
+  return (
+    <div className="rounded border-2 border-dashed border-slate-600 bg-slate-900/40 p-2">
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          RAM (DIMM Slots){mobo ? ` · ${usedSticks}/${total} sticks` : ""}
+        </span>
+      </div>
+      {!mobo ? (
+        <div className="text-xs text-slate-500">Select a motherboard to see DIMM slots.</div>
+      ) : total === 0 ? (
+        <div className="text-xs text-slate-500">Motherboard has no DIMM slots.</div>
+      ) : (
+        <div className={`grid gap-1 ${total >= 4 ? "grid-cols-4" : "grid-cols-2"}`}>
+          {cells.slice(0, total).map((cell, idx) => {
+            if (!cell) {
+              return (
+                <div
+                  key={idx}
+                  onClick={onAdd}
+                  className="flex h-12 cursor-pointer flex-col justify-center rounded border-2 border-dashed border-slate-600 bg-slate-900/40 px-2 hover:border-emerald-500"
+                >
+                  <div className="text-[9px] uppercase tracking-wider text-slate-500">DIMM {idx + 1}</div>
+                  <div className="text-[10px] text-slate-500">+ Add</div>
+                </div>
+              );
+            }
+            return (
+              <div
+                key={idx}
+                className="group relative flex h-12 flex-col justify-center rounded border-2 border-emerald-600/60 bg-emerald-950/30 px-2"
+              >
+                <div className="text-[9px] uppercase tracking-wider text-emerald-400">DIMM {idx + 1}</div>
+                <div className="truncate text-[10px] text-slate-100">
+                  {cell.first ? `${cell.kit.brand} ${cell.kit.capacity_gb}GB-${cell.kit.speed_mhz}` : "↑ same kit"}
+                </div>
+                {cell.first && (
+                  <button
+                    onClick={() => onRemoveKit(cell.kitIndex)}
+                    className="absolute right-1 top-0.5 hidden text-rose-400 hover:text-rose-300 group-hover:block"
+                    title="Remove this kit"
+                  >×</button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Discrete NVMe (M.2) slots tied to motherboard.nvme_slots.
+function NvmeRow({
+  mobo, drives, onAdd, onRemove,
+}: {
+  mobo: Motherboard | null;
+  drives: SSD[];
+  onAdd: () => void;
+  onRemove: (id: string) => void;
+}) {
+  const total = mobo?.nvme_slots ?? 0;
+  return (
+    <div className="rounded border-2 border-dashed border-slate-600 bg-slate-900/40 p-2">
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        NVMe (M.2){mobo ? ` · ${drives.length}/${total}` : ""}
+      </div>
+      {!mobo ? (
+        <div className="text-xs text-slate-500">Select a motherboard.</div>
+      ) : total === 0 ? (
+        <div className="text-xs text-slate-500">No M.2 slots on this motherboard.</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-1">
+          {Array.from({ length: total }).map((_, idx) => {
+            const item = drives[idx];
+            if (!item) {
+              return (
+                <div
+                  key={idx}
+                  onClick={onAdd}
+                  className="flex cursor-pointer flex-col rounded border-2 border-dashed border-slate-600 bg-slate-900/40 px-2 py-1 hover:border-emerald-500"
+                >
+                  <div className="text-[9px] uppercase tracking-wider text-slate-500">M.2_{idx + 1}</div>
+                  <div className="text-[10px] text-slate-500">+ Add</div>
+                </div>
+              );
+            }
+            return (
+              <div
+                key={idx}
+                className="group relative flex flex-col rounded border-2 border-emerald-600/60 bg-emerald-950/30 px-2 py-1"
+              >
+                <div className="text-[9px] uppercase tracking-wider text-emerald-400">M.2_{idx + 1}</div>
+                <div className="truncate text-[10px] text-slate-100">
+                  {item.brand} {item.capacity_gb}GB
+                </div>
+                <button
+                  onClick={() => onRemove(item.id)}
+                  className="absolute right-1 top-0.5 hidden text-rose-400 hover:text-rose-300 group-hover:block"
+                  title="Remove drive"
+                >×</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

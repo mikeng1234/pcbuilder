@@ -40,3 +40,28 @@ create policy "anon update" on public.components for update to anon using (true)
 create policy "anon delete" on public.components for delete to anon using (true);
 
 create index if not exists components_category_idx on public.components (category);
+
+-- ===========================================================
+-- Sales — archived builds with revenue tracking
+-- ===========================================================
+create table if not exists public.sales (
+  id        uuid primary key default gen_random_uuid(),
+  name      text,
+  items     jsonb not null,             -- snapshot of components sold
+  gross     numeric not null default 0, -- sum of selling prices
+  cost      numeric not null default 0, -- sum of internal costs
+  net       numeric not null default 0, -- gross - cost
+  sold_at   timestamptz not null default now()
+);
+
+alter table public.sales enable row level security;
+
+drop policy if exists "anon select sales" on public.sales;
+drop policy if exists "anon insert sales" on public.sales;
+drop policy if exists "anon delete sales" on public.sales;
+
+create policy "anon select sales" on public.sales for select to anon using (true);
+create policy "anon insert sales" on public.sales for insert to anon with check (true);
+create policy "anon delete sales" on public.sales for delete to anon using (true);
+
+create index if not exists sales_sold_at_idx on public.sales (sold_at desc);

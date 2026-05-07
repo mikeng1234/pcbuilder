@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Category, Component } from "../types/components";
 import { ALL_CATEGORIES, exportInventory, templateFor } from "../lib/inventory";
 import { php } from "../lib/format";
@@ -45,6 +45,10 @@ export function Inventory({ inventory, setInventory }: Props) {
   const onAddNew = (cat: Category) => {
     setEditing(templateFor(cat, inventory));
     setIsNew(true);
+  };
+
+  const patchItem = (id: string, patch: Partial<Component>) => {
+    setInventory(inventory.map(i => i.id === id ? ({ ...i, ...patch } as Component) : i));
   };
 
   const onDuplicate = (item: Component) => {
@@ -120,10 +124,39 @@ export function Inventory({ inventory, setInventory }: Props) {
                       const margin = it.price > 0 ? ((it.price - it.cost) / it.price * 100).toFixed(0) : "—";
                       return (
                         <tr key={it.id} className="border-t border-slate-800 hover:bg-slate-800/50">
-                          <td className="px-3 py-1.5">{it.brand} {it.model}</td>
+                          <td className="px-3 py-1.5">
+                            <div className="flex flex-wrap items-center gap-1">
+                              <InlineText
+                                value={it.brand}
+                                placeholder="brand"
+                                onSave={v => patchItem(it.id, { brand: v } as Partial<Component>)}
+                                className="font-semibold"
+                              />
+                              <InlineText
+                                value={it.model}
+                                placeholder="model"
+                                onSave={v => patchItem(it.id, { model: v } as Partial<Component>)}
+                                className="text-slate-300"
+                              />
+                            </div>
+                          </td>
                           <td className="px-3 py-1.5 text-slate-400">{specSummary(it)}</td>
-                          <td className="px-3 py-1.5 text-right font-mono">{php(it.cost)}</td>
-                          <td className="px-3 py-1.5 text-right font-mono text-emerald-400">{php(it.price)}</td>
+                          <td className="px-3 py-1.5 text-right font-mono">
+                            <InlineNumber
+                              value={it.cost}
+                              onSave={v => patchItem(it.id, { cost: v } as Partial<Component>)}
+                              format={php}
+                              align="right"
+                            />
+                          </td>
+                          <td className="px-3 py-1.5 text-right font-mono text-emerald-400">
+                            <InlineNumber
+                              value={it.price}
+                              onSave={v => patchItem(it.id, { price: v } as Partial<Component>)}
+                              format={php}
+                              align="right"
+                            />
+                          </td>
                           <td className="px-3 py-1.5 text-right font-mono text-amber-400">{margin}%</td>
                           <td className="px-3 py-1.5 text-right">
                             <button
@@ -162,6 +195,99 @@ export function Inventory({ inventory, setInventory }: Props) {
         />
       )}
     </div>
+  );
+}
+
+// ---------- Inline editable cells ----------
+function InlineText({
+  value, onSave, placeholder, className = "",
+}: { value: string; onSave: (v: string) => void; placeholder?: string; className?: string }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (!editing) setDraft(value); }, [value, editing]);
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  const commit = () => {
+    setEditing(false);
+    if (draft !== value) onSave(draft);
+  };
+  const cancel = () => { setEditing(false); setDraft(value); };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+          else if (e.key === "Escape") { e.preventDefault(); cancel(); }
+        }}
+        className="rounded border border-emerald-600 bg-slate-950 px-1 py-0.5 text-xs outline-none"
+      />
+    );
+  }
+  return (
+    <span
+      onClick={() => setEditing(true)}
+      className={`cursor-text rounded px-1 hover:bg-slate-800 ${className} ${value ? "" : "italic text-slate-500"}`}
+      title="Click to edit"
+    >
+      {value || placeholder || "—"}
+    </span>
+  );
+}
+
+function InlineNumber({
+  value, onSave, format, align = "left",
+}: {
+  value: number; onSave: (v: number) => void;
+  format?: (n: number) => string;
+  align?: "left" | "right";
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (!editing) setDraft(String(value)); }, [value, editing]);
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  const commit = () => {
+    setEditing(false);
+    const n = Number(draft);
+    if (!Number.isNaN(n) && n !== value) onSave(n);
+    else setDraft(String(value));
+  };
+  const cancel = () => { setEditing(false); setDraft(String(value)); };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        step="any"
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+          else if (e.key === "Escape") { e.preventDefault(); cancel(); }
+        }}
+        className={`w-24 rounded border border-emerald-600 bg-slate-950 px-1 py-0.5 text-xs outline-none ${align === "right" ? "text-right" : ""}`}
+      />
+    );
+  }
+  return (
+    <span
+      onClick={() => setEditing(true)}
+      className="cursor-text rounded px-1 hover:bg-slate-800"
+      title="Click to edit"
+    >
+      {format ? format(value) : value}
+    </span>
   );
 }
 
